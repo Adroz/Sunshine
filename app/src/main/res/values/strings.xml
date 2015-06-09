@@ -5,4 +5,5 @@
     <string name="title_activity_detail">DetailActivity</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_map">Map</string>
+    <string name="action_share">Share</string>
 </resources>
