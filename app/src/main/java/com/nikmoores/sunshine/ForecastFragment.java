@@ -133,8 +133,6 @@ public class ForecastFragment extends Fragment {
         if (!Boolean.parseBoolean(unitType)) {
             high = (high * 1.8) + 32;
             low = (low * 1.8) + 32;
-        } else {
-            Log.d(LOG_TAG, "Unit type not found: " + unitType);
         }
 
         // For presentation, assume the user doesn't care about tenths of a degree.
