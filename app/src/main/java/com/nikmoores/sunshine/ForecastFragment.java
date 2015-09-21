@@ -107,7 +107,7 @@ public class ForecastFragment extends Fragment {
         fetchWeatherTask.execute(postCode + ",au");
     }
 
-    /* The date/time conversion code is going to be moved outside the asynctask later,
+    /* The date/time conversion code is going to be moved outside the asyncTask later,
          * so for convenience we're breaking it out into its own method now.
          */
     private String getReadableDateString(long time) {
