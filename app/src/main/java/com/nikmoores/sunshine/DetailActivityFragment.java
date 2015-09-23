@@ -2,6 +2,7 @@ package com.nikmoores.sunshine;
 
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
@@ -19,6 +20,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.nikmoores.sunshine.data.WeatherContract;
 import com.nikmoores.sunshine.data.WeatherContract.WeatherEntry;
 
 
@@ -30,8 +32,10 @@ public class DetailActivityFragment extends Fragment implements LoaderManager.Lo
     private static final String LOG_TAG = DetailActivityFragment.class.getSimpleName();
 
     private static String FORECAST_SHARE_STRING = "#SunshineApp";
+    static final String DETAIL_URI = "URI";
     private ShareActionProvider mShareActionProvider;
     private String mForecast;
+    private Uri mUri;
 
     private static final int DETAIL_LOADER = 0;
 
@@ -78,8 +82,13 @@ public class DetailActivityFragment extends Fragment implements LoaderManager.Lo
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
 
+        Bundle arguments = getArguments();
+        if (arguments != null) {
+            mUri = arguments.getParcelable(DetailActivityFragment.DETAIL_URI);
+        }
+
+        View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
         mDayView = (TextView) rootView.findViewById(R.id.detail_day_textview);
         mDateView = (TextView) rootView.findViewById(R.id.detail_date_textview);
         mHighView = (TextView) rootView.findViewById(R.id.detail_high_textview);
@@ -101,7 +110,7 @@ public class DetailActivityFragment extends Fragment implements LoaderManager.Lo
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        inflater.inflate(R.menu.forecast_fragment, menu);
+        inflater.inflate(R.menu.menu_detail, menu);
 
         // Locate MenuItem with ShareActionProvider
         MenuItem item = menu.findItem(R.id.action_share);
@@ -109,7 +118,7 @@ public class DetailActivityFragment extends Fragment implements LoaderManager.Lo
         // Fetch and store ShareActionProvider
         mShareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(item);
 
-        if (mForecast != null) {
+        if (mForecast != null && mShareActionProvider != null) {
             mShareActionProvider.setShareIntent(createShareForecastIntent());
         }
     }
@@ -139,21 +148,32 @@ public class DetailActivityFragment extends Fragment implements LoaderManager.Lo
         return sendIntent;
     }
 
+    void onLocationChanged(String newLocation) {
+        // replace the uri, since the location has changed
+        Uri uri = mUri;
+        if (null != uri) {
+            long date = WeatherContract.WeatherEntry.getDateFromUri(uri);
+            mUri = WeatherEntry.buildWeatherLocationWithDate(newLocation, date);
+            getLoaderManager().restartLoader(DETAIL_LOADER, null, this);
+        }
+    }
+
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         Log.v(LOG_TAG, "In onCreateLoader");
-        Intent intent = getActivity().getIntent();
-        if (intent == null) {
-            return null;
+        if (null != mUri) {
+            // Now create and return a CursorLoader that will take care of
+            // creating a Cursor for the data being displayed.
+            return new CursorLoader(
+                    getActivity(),
+                    mUri,
+                    DETAIL_COLUMNS,
+                    null,
+                    null,
+                    null
+            );
         }
-        return new CursorLoader(
-                getActivity(),
-                intent.getData(),
-                DETAIL_COLUMNS,
-                null,
-                null,
-                null
-        );
+        return null;
     }
 
     @Override
@@ -164,7 +184,7 @@ public class DetailActivityFragment extends Fragment implements LoaderManager.Lo
             Long date = data.getLong(COL_WEATHER_DATE);
             mDayView.setText(Utility.getDayName(getActivity(), date));
             String dateString = Utility.formatDate(date);
-            mDateView.setText(Utility.getFormattedMonthDay(getActivity(),date));
+            mDateView.setText(Utility.getFormattedMonthDay(getActivity(), date));
 
             // Configure Temperature
             boolean isMetric = Utility.isMetric(getActivity());
@@ -202,8 +222,6 @@ public class DetailActivityFragment extends Fragment implements LoaderManager.Lo
                 mShareActionProvider.setShareIntent(createShareForecastIntent());
             }
         }
-
-
     }
 
     @Override
