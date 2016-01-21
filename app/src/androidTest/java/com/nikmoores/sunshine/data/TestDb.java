@@ -20,8 +20,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.test.AndroidTestCase;
 
-import com.nikmoores.sunshine.data.WeatherDbHelper;
-
 import java.util.HashSet;
 
 public class TestDb extends AndroidTestCase {
@@ -73,6 +71,8 @@ public class TestDb extends AndroidTestCase {
         do {
             tableNameHashSet.remove(c.getString(0));
         } while( c.moveToNext() );
+
+        c.close();
 
         // if this fails, it means that your database doesn't contain both the location entry
         // and weather entry tables
